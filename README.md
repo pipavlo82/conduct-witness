@@ -12,7 +12,7 @@ No daily witness workflow, witness private key, GitHub secret, or external witne
 
 Derived from ogasurfproject-jpg/conduct-witness-template at 817913c54d6679e5aab1bb287c989651dea9d6c3.
 HORIZON SHIELD fixture/SDK source: d9b3075928ab0ef41f1a9b6b6970887c18b4fb44.
-Published verifiers: nenrin-verify 0.3.0 and a2a-sdk 1.2.1.
+Published verifiers: nenrin-verify 0.4.5 and a2a-sdk 1.2.1.
 All Python dependencies are fixed in requirements.lock with wheel SHA-256 values, targeting CPython 3.12 on Linux x86_64.
 
 Adaptations: omit setup and daily walk, retain full logs, hash-lock dependencies, pin action commits, disable checkout credentials, and isolate attestation permissions from verifier execution. reproduce.sh otherwise preserves upstream receipt/check semantics.
@@ -21,3 +21,9 @@ Dependency or source updates require a new reviewed commit; old receipts remain 
 Run locally on compatible Linux with Python 3.12, Node 22 and bash:
 install requirements.lock using pip --require-hashes --only-binary=:all:,
 checkout the pinned HORIZON SHIELD source into upstream, then run bash reproduce.sh.
+
+## Approval checks added 2026-10-05
+
+The package is pinned to 0.4.5 (source commit 7264b64f3ec39f2457b8f153ad338457e49df5ae). Its 51 vendored files were compared byte-for-byte with that source; the two adapted top-level modules match their declared source and packaged digests.
+
+An explicit settle_v1_10 self-test is included in the receipt alongside all five existing check groups. This covers pinned approvers, forged approvals, cross-contract binding, replay, late approval, repeatable approval, wrong action and expiry. These are upstream synthetic tests, not a complete independent security audit or a live two-party contract. The original A2A fixture/SDK pin and run0002 expected hashes remain unchanged.

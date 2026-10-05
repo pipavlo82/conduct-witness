@@ -3,7 +3,7 @@
 # or your runner, and write what you got to receipt.json. Nothing here trusts HORIZON SHIELD's servers: the
 # verifiers come from PyPI, the fixtures from a pinned git commit, and every result is recomputed here.
 #
-#   pip install "nenrin-verify==0.3.0" "a2a-sdk[http-server]==1.2.1" uvicorn     (and node 18+ on the PATH)
+#   pip install "nenrin-verify==0.4.5" "a2a-sdk[http-server]==1.2.1" uvicorn     (and node 18+ on the PATH)
 #   UPSTREAM=path/to/horizon-shield bash reproduce.sh
 set -uo pipefail
 UPSTREAM="${UPSTREAM:-upstream}"
@@ -16,6 +16,7 @@ run() { local name="$1"; shift; ( "$@" ) >"$LOG/$name.txt" 2>&1; echo $? >"$LOG/
 run selftest nenrin-verify --selftest
 run run0002 musubi-verify --run0002
 run musubi_selftest musubi-verify --selftest
+run approval_v1_10 musubi-verify settle_v1_10 --selftest
 run e2e_check bash -c "cd '$E2E' && python e2e.py --check"
 run e2e_live bash -c "cd '$E2E' && python e2e.py"
 
@@ -27,7 +28,7 @@ def r(name):
     txt = open(os.path.join(log, name + ".txt"), encoding="utf-8", errors="replace").read()
     return {"exit": int(open(os.path.join(log, name + ".rc")).read().strip()), "stdout_sha256": hashlib.sha256(txt.encode()).hexdigest(),
             "last_lines": txt.strip().splitlines()[-6:]}
-res = {k: r(k) for k in ["selftest", "run0002", "musubi_selftest", "e2e_check", "e2e_live"]}
+res = {k: r(k) for k in ["selftest", "run0002", "musubi_selftest", "approval_v1_10", "e2e_check", "e2e_live"]}
 m = re.search(r"anchored ([0-9a-f]{64}), settlement ([0-9a-f]{64})", "\n".join(res["run0002"]["last_lines"]))
 res["run0002"]["recomputed"] = {"anchored": m.group(1), "settlement": m.group(2)} if m else None
 res["e2e_check"]["python_javascript_report_sha256_prefixes"] = re.findall(r"python ([0-9a-f]{12})  javascript ([0-9a-f]{12})", open(os.path.join(log, "e2e_check.txt"), encoding="utf-8").read())
@@ -45,7 +46,7 @@ receipt = {
     "recomputed_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     "where": {"repository": env.get("GITHUB_REPOSITORY"), "run_url": (env.get("GITHUB_SERVER_URL", "") + "/" + env.get("GITHUB_REPOSITORY", "") + "/actions/runs/" + env.get("GITHUB_RUN_ID", "")) if env.get("GITHUB_RUN_ID") else None,
               "runner": platform.platform(), "python": platform.python_version(), "node": node},
-    "inputs": {"nenrin-verify": ver("nenrin-verify"), "a2a-sdk": ver("a2a-sdk"), "horizon_shield_commit": commit},
+    "inputs": {"nenrin-verify": ver("nenrin-verify"), "a2a-sdk": ver("a2a-sdk"), "horizon_shield_commit": commit, "nenrin_package_source_commit": "7264b64f3ec39f2457b8f153ad338457e49df5ae", "requirements_lock_sha256": hashlib.sha256(open("requirements.lock", "rb").read()).hexdigest()},
     "results": res,
     "all_passed": all(v["exit"] == 0 for v in res.values()),
     "what_this_does_not_establish": "that the evidence is true, only that these published verifiers return these results on this machine; a receipt from the operator's own machine would not count, which is why it lives in your repository",
