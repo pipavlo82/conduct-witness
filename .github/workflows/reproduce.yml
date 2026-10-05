@@ -35,6 +35,10 @@ jobs:
       - name: install the published verifiers
         run: |
           python -m pip install --disable-pip-version-check --only-binary=:all: --require-hashes -r requirements.lock
+      - name: install isolated approval verifier
+        run: |
+          python -m venv .venv-approval
+          .venv-approval/bin/python -m pip install --disable-pip-version-check --only-binary=:all: --require-hashes -r requirements-approval.lock
       - name: recompute
         run: UPSTREAM=upstream OUT=receipt.json bash reproduce.sh
       - name: preserve receipt and logs
@@ -46,6 +50,7 @@ jobs:
             receipt.json
             logs/
             requirements.lock
+            requirements-approval.lock
           retention-days: 90
           if-no-files-found: error
   attest:
